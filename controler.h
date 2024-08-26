@@ -6,11 +6,11 @@
 bool estado=true; //0 1_Vacio 2_Carga
 float ki1, ki2, ki3, kv1, kv2, kv3;
 float H_i, ei, ei_m1, ei_m2, ei_m3, ui , ui_m1, H_v, ev , ev_m1 , ev_m2 , ev_m3, uv, uv_m1;
-float v_ref;
-float i_max;
+float v_ref=15;
+float i_max=1.5;
 int caso;
 unsigned long lastExecutionTime = 0; // Variable para almacenar el tiempo de la última ejecución
-const unsigned long executionInterval = 500; // Intervalo de 5 segundos en milisegundos
+const unsigned long executionInterval = 100; // Intervalo de 5 segundos en milisegundos
 
 float valores[6][12] = {
         //sin carga                                     con carga
@@ -143,7 +143,6 @@ void constantes_control(){
   kv1 = valores[caso][3];
   kv2 = valores[caso][4];
   kv3 = valores[caso][5];
-  
   } else {
   ki1 = valores[caso][6];
   ki2 = valores[caso][7];

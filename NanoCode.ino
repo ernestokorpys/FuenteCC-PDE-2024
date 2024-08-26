@@ -26,7 +26,8 @@ double i_act = 0;
 unsigned long startTime = 0;  // Tiempo de inicio para la medición
 bool isBelowThreshold = false;  // Estado si v_act está por debajo del umbral
 const int pinCarga = 2;  // Pin donde que trabaja sobre el relé
-
+float aux;
+int dacValue;
 void setup() {
   Serial.begin(9600);
   Wire.begin();
@@ -35,6 +36,9 @@ void setup() {
   // Inicialización de ADC y DAC
   ads.begin(ADS1115_ADDRESS);
   dac.begin(MCP4725_ADDRESS);
+  ads.setDataRate(RATE_ADS1115_860SPS);   // Configura la velocidad de muestreo a 250 SPS
+  pinMode(2, OUTPUT); // Pin D2 Output Rele
+  digitalWrite(2, HIGH);
   reset_variables();
   constantes_control();
   setPotentiometer(0,50);  // Canal 0, valor 128 (mitad del rango)
@@ -42,18 +46,22 @@ void setup() {
 }
 
 void loop() {
-  reference();
+  //reference();
   adc0 = ads.readADC_SingleEnded(0);
   adc1 = ads.readADC_SingleEnded(1);
   voltage0 = adc0 * (5.0 / ADC_RESOLUTION);  // Convierte el valor del ADC0 a voltaje
   voltage1 = adc1 * (5.0 / ADC_RESOLUTION);  // Convierte el valor del ADC1 a voltaje
   v_act = voltage0 * H_v;
   i_act = voltage1 * H_i;
-  conexion_desconexion_carga();
-  //algoritmo_control(v_act, i_act);
-  Actualizar_Pantalla(v_act, i_act);
-  encoder_1();
-  encoder_2();
+  // conexion_desconexion_carga();
+  // Serial.println(v_ref, 6);  // Imprime i_act con 6 decimales de precisión
+  algoritmo_control(v_act, i_act);
+  //Actualizar_Pantalla(v_act, i_act);
+  //encoder_1();
+  //encoder_2();
+  aux = (ui * DAC_RESOLUTION) / 5.0;  // Ajusta el voltaje a la resolución del DAC
+  dacValue = aux;
+  dac.setVoltage(dacValue, false);  // Enviar valor al DAC
 }
 
 void conexion_desconexion_carga(){
@@ -106,4 +114,5 @@ void reference(){
       break;
   }  
 }
+
 
