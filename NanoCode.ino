@@ -6,20 +6,26 @@
 #include <Key.h>
 #include <Keypad.h>
 #include "display.h"
-
-Adafruit_ADS1115 ads;
-Adafruit_MCP4725 dac;
-
-// Variables para almacenar valores del ADC
-int16_t adc0, adc1;
-float v_ref, i_ref;
-int modo_ref;
-
+#include "controler.h"
 // Direcciones de los dispositivos I2C
 #define ADS1115_ADDRESS 0x48
 #define MCP4725_ADDRESS 0x60
 #define DAC_RESOLUTION 4095.0
 #define ADC_RESOLUTION 26666.0   // Valor Practico diferente a valor real que es 2^16 
+#define MCP4661_ADDRESS 0x28  //Potenciometro
+Adafruit_ADS1115 ads;
+Adafruit_MCP4725 dac;
+
+// Variables para almacenar valores del ADC
+int16_t adc0, adc1;
+int modo_ref;
+double voltage0 = 0.0;
+double voltage1 = 0.0;
+double v_act = 0; 
+double i_act = 0;
+unsigned long startTime = 0;  // Tiempo de inicio para la medición
+bool isBelowThreshold = false;  // Estado si v_act está por debajo del umbral
+const int pinCarga = 2;  // Pin donde que trabaja sobre el relé
 
 void setup() {
   Serial.begin(9600);
@@ -29,30 +35,75 @@ void setup() {
   // Inicialización de ADC y DAC
   ads.begin(ADS1115_ADDRESS);
   dac.begin(MCP4725_ADDRESS);
+  reset_variables();
+  constantes_control();
+  setPotentiometer(0,50);  // Canal 0, valor 128 (mitad del rango)
+  conexion_desconexion_carga();
 }
 
 void loop() {
+  reference();
+  adc0 = ads.readADC_SingleEnded(0);
+  adc1 = ads.readADC_SingleEnded(1);
+  voltage0 = adc0 * (5.0 / ADC_RESOLUTION);  // Convierte el valor del ADC0 a voltaje
+  voltage1 = adc1 * (5.0 / ADC_RESOLUTION);  // Convierte el valor del ADC1 a voltaje
+  v_act = voltage0 * H_v;
+  i_act = voltage1 * H_i;
+  conexion_desconexion_carga();
+  //algoritmo_control(v_act, i_act);
+  Actualizar_Pantalla(v_act, i_act);
+  encoder_1();
+  encoder_2();
+}
+
+void conexion_desconexion_carga(){
+   if (v_act < v_ref*1.1) {
+    if (!isBelowThreshold) {
+      startTime = millis();  // Si es la primera vez que está por debajo, guarda el tiempo actual
+      isBelowThreshold = true;
+    } else {
+      if (millis() - startTime >= 2000) { // Han pasado 2 segundos con v_act por debajo del valor de referencia
+        digitalWrite(pinCarga, HIGH);
+      }
+    }
+  } else {    // Si v_act está por encima del valor de referencia
+    isBelowThreshold = false;  // Reinicia el estado
+    digitalWrite(pinCarga, LOW);
+  }
+}
+
+void setPotentiometer(byte channel, byte value) {
+  Wire.beginTransmission(MCP4661_ADDRESS);
+  Wire.write((channel == 0) ? 0x00 : 0x10); // Selecciona el canal (0 o 1)
+  Wire.write(value); // Configura el valor del potenciómetro
+  Wire.endTransmission();
+}
+void reference(){
   modo_ref = Menu_Teclado();
   switch (modo_ref){
     case 0: //No hace nada
+      // Desconecta rele forzosamente.
       break;   
     case 1:
       v_ref= Tension;
-      i_ref= Corriente;
+      i_max= Corriente;
      break;
     case 5:
       v_ref= v_encoder;
-      i_ref = i_encoder;
+      i_max = i_encoder;
       break;
     case 2:
-      i_ref = Corriente;
+      i_max = Corriente;
       break;
     case 6:
-      i_ref = i_encoder;
+      i_max = i_encoder;
       break;
-  }    
-  Actualizar_Pantalla( v_ref, i_ref);
-  encoder_1();
-  encoder_2();
-
+    case 3:
+      v_ref = Tension;
+      break;
+    case 7:
+      v_ref= v_encoder;
+      break;
+  }  
 }
+
