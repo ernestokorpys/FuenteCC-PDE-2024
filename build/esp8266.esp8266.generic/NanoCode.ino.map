@@ -1,4 +1,4 @@
-Archive member included to satisfy reference by file (symbol)
+Archive member included to satisfy referenceValues by file (symbol)
 
 C:\Users\HP\AppData\Local\Temp\arduino\cores\fc503edea69a807680475b17594811dc\core.a(HardwareSerial.cpp.o)
                               C:\Users\HP\AppData\Local\Temp\arduino\sketches\4A6E9E8A24F7DBEDC1D0E754057CC62A\sketch\NanoCode.ino.cpp.o (_ZN14HardwareSerial5beginEm12SerialConfig10SerialModehb)

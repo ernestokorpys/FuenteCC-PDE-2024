@@ -1,5 +1,5 @@
-#ifndef CONTROLER_H
-#define CONTROLER_H
+#ifndef CONTROLLER_H
+#define CONTROLLER_H
 //--------------------------------------------------------------------------------------------------------------------------------
 //    Constantes de control
 //--------------------------------------------------------------------------------------------------------------------------------
@@ -120,7 +120,7 @@ void lazo_control(float v_act, float i_act) {
   ui_m1 = ui;
 }
 
-void constantes_control(){
+void constantesControlador(){
   if (v_ref <= 5) {
   caso=0;
   } else if (v_ref <= 10) {

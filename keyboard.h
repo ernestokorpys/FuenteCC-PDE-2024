@@ -4,18 +4,18 @@
 #include <Keypad.h>
 #include <Arduino.h>
 
-int SCREEN = 0; // Variable que indica la pantalla actual
+int screen = 0; // Variable que indica la pantalla actual
 int menuSelection = 1; // Variable que indica la selección actual del menú y ayuda a moverse
 const float MAX_TENSION = 30.00;
 const float MAX_CORRIENTE = 3.00;
-float Tension = 0.00; float Corriente = 0.000;
-float Tension2, Corriente2;
-int Tiempo2;
-int Tiempo = 0;
+float t_teclado = 0.00; float i_teclado = 0.000;
+float t_teclado_aux, i_teclado_aux;
+int tiempo2;
+int tiempo = 0;
 int TiempoTranscurrido = 0;
 char tensString[5] = "    ";  char corrienteString[5] = "    "; // Almacenar los valores como una cadena de caracteres de 4 dígitos
 bool edit_values = false; bool encoders = false;
-int Mode=0; //0.Sin Modo; 1. Tensión; 2. Corriente; 3. Rampa Define el modo de funcionamiento
+int modo=0; //0.Sin Modo; 1. Tensión; 2. i_teclado; 3. Rampa Define el modo de funcionamiento
 const byte ROWS = 4; const byte COLUMNS = 4;
 char keys[ROWS][COLUMNS] = {
   {'1','2','3','A'},
@@ -37,36 +37,36 @@ int Menu_Teclado(){
   if (key) {
     Serial.println(key);
     Keyboard(key);
-    if (key == '#' && SCREEN!=0) {
+    if (key == '#' && screen!=0) {
     switch (menuSelection){
       case 0: 
-        return Mode=0;
+        return modo=0;
         //No hace nada 
         break;
       case 1:         //Limita tension y corriente.
         if(encoders==true){
-          return Mode=5;
+          return modo=5;
         } else{
-          return Mode=1;
+          return modo=1;
         }
         break;
       case 2:
         if(encoders==true){
-          return Mode=6;
+          return modo=6;
         } else{
-          return Mode=2;
+          return modo=2;
         }
         break;
       case 3: //Hace rampa
         if(encoders==true){
-          return Mode=7;
+          return modo=7;
         } else{
-          return Mode=3;
+          return modo=3;
         }
         break;
       }
   }
-  return Mode;
+  return modo;
   }
 }
 
@@ -80,14 +80,14 @@ void Keyboard(int key) {
         if(updateFloatValues()){
           switch (menuSelection){
             case 1:
-              SCREEN=1;
+              screen=1;
               break;
             case 2:
-              SCREEN=2;
+              screen=2;
               break;
           }
         }else{
-          SCREEN=4;
+          screen=4;
         } // Actualizar los valores de tensión y corriente
       }
       } else {
@@ -95,18 +95,18 @@ void Keyboard(int key) {
          if (index == 6) { // Si se han ingresado todos los valores
           edit_values = false; // Finalizar la edición de valores
           if(updateRampFloatValues()){
-            SCREEN=3;
+            screen=3;
           } else{
-            SCREEN=4;
+            screen=4;
           }
         }
         //Funcion para cargar el valor de tension y el tiempo en seg
       }
     }
   }
-  if (key == 'A' && SCREEN != 0) {
+  if (key == 'A' && screen != 0) {
     edit_values = true;
-    SCREEN = 5; // Cambiar a la pantalla de visualización de valores
+    screen = 5; // Cambiar a la pantalla de visualización de valores
     switch (menuSelection) {
       case 1: 
       index=0;
@@ -121,20 +121,20 @@ void Keyboard(int key) {
     memset(corrienteString, ' ', sizeof(corrienteString)); // Limpiar el arreglo de la corriente
     memset(listValue, 0, sizeof(listValue)); // Reiniciar la lista de valores
   }
-  if (key == 'B' && SCREEN == 0) {
+  if (key == 'B' && screen == 0) {
     menuSelection++;
     if (menuSelection > 3) {
       menuSelection = 1;
     }
   }
   if (key == 'C') {
-    SCREEN = menuSelection;
+    screen = menuSelection;
   }
   if (key == 'D') {
-    if (SCREEN==0){
-      Mode=0;
+    if (screen==0){
+      modo=0;
     }
-    SCREEN = 0;
+    screen = 0;
   }
   if (key == '*'){
     if(encoders==true){
@@ -157,11 +157,11 @@ void updateValues(int key) {
 
 bool updateFloatValues() {
   // Calcular los valores de tensión y corriente a partir de los valores ingresados
-  Tension2 = (listValue[0] * 10 + listValue[1]) + (listValue[2] * 0.1) + (listValue[3] * 0.01);
-  Corriente2 = (listValue[4] + (listValue[5] * 0.1) + (listValue[6] * 0.01) + (listValue[7] * 0.001));
-  if (Tension2<=MAX_TENSION && Corriente2<=MAX_CORRIENTE){
-    Tension=Tension2;
-    Corriente=Corriente2;
+  t_teclado_aux = (listValue[0] * 10 + listValue[1]) + (listValue[2] * 0.1) + (listValue[3] * 0.01);
+  i_teclado_aux = (listValue[4] + (listValue[5] * 0.1) + (listValue[6] * 0.01) + (listValue[7] * 0.001));
+  if (t_teclado_aux<=MAX_TENSION && i_teclado_aux<=MAX_CORRIENTE){
+    t_teclado=t_teclado_aux;
+    i_teclado=i_teclado_aux;
     return true;
   }
   return false;
@@ -180,15 +180,15 @@ void updateRampValues(int key) {
 
 bool updateRampFloatValues() {
   // Calcular los valores de tensión y tiempo a partir de los valores ingresados en listRamp
-  Tension2 = (listRamp[0] * 10 + listRamp[1]) + (listRamp[2] * 0.1) + (listRamp[3] * 0.01);
-  Tiempo2 = (listRamp[4] * 10 + listRamp[5]);
+  t_teclado_aux = (listRamp[0] * 10 + listRamp[1]) + (listRamp[2] * 0.1) + (listRamp[3] * 0.01);
+  tiempo2 = (listRamp[4] * 10 + listRamp[5]);
   
   // Verificar si los valores están en rango
-  if (Tension2 <= MAX_TENSION && Tiempo2 >= 0) {
-    Tension = Tension2;
-    Tiempo = Tiempo2;
+  if (t_teclado_aux <= MAX_TENSION && tiempo2 >= 0) {
+    t_teclado = t_teclado_aux;
+    tiempo = tiempo2;
     Serial.print("TiempoCargado: ");
-    Serial.println(Tiempo);
+    Serial.println(tiempo);
     return true; // Los valores están en rango y se cargaron a las variables
   }
   return false; // Al menos uno de los valores está fuera de rango

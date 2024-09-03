@@ -6,7 +6,7 @@
 #include <Key.h>
 #include <Keypad.h>
 #include "display.h"
-#include "controler.h"
+#include "controller.h"
 // Direcciones de los dispositivos I2C
 #define ADS1115_ADDRESS 0x48
 #define MCP4725_ADDRESS 0x60
@@ -19,11 +19,9 @@ Adafruit_MCP4725 dac;
 // Variables para almacenar valores del ADC
 int16_t adc0, adc1;
 int modo_ref;
-double voltage0 = 0.0;
-double voltage1 = 0.0;
 double v_act = 0; 
 double i_act = 0;
-unsigned long startTime = 0;  // Tiempo de inicio para la medición
+unsigned long startTime = 0;  // tiempo de inicio para la medición
 bool isBelowThreshold = false;  // Estado si v_act está por debajo del umbral
 const int pinCarga = 2;  // Pin donde que trabaja sobre el relé
 float aux;
@@ -40,20 +38,19 @@ void setup() {
   pinMode(2, OUTPUT); // Pin D2 Output Rele
   digitalWrite(2, HIGH);
   reset_variables();
-  constantes_control();
+  constantesControlador();
   setPotentiometer(0,50);  // Canal 0, valor 128 (mitad del rango)
-  conexion_desconexion_carga();
+  proteccionDeCarga();
 }
 
 void loop() {
-  //reference();
+  //referenceValues();
   adc0 = ads.readADC_SingleEnded(0);
   adc1 = ads.readADC_SingleEnded(1);
-  voltage0 = adc0 * (5.0 / ADC_RESOLUTION);  // Convierte el valor del ADC0 a voltaje
-  voltage1 = adc1 * (5.0 / ADC_RESOLUTION);  // Convierte el valor del ADC1 a voltaje
-  v_act = voltage0 * H_v;
-  i_act = voltage1 * H_i;
-  // conexion_desconexion_carga();
+  v_act = (adc0 * (5.0 / ADC_RESOLUTION))*H_v;  // Convierte el valor del ADC0 a voltaje
+  i_act = (adc1 * (5.0 / ADC_RESOLUTION))*H_i;  // Convierte el valor del ADC1 a voltaje
+
+  // proteccionDeCarga();
   // Serial.println(v_ref, 6);  // Imprime i_act con 6 decimales de precisión
   algoritmo_control(v_act, i_act);
   //Actualizar_Pantalla(v_act, i_act);
@@ -64,7 +61,7 @@ void loop() {
   dac.setVoltage(dacValue, false);  // Enviar valor al DAC
 }
 
-void conexion_desconexion_carga(){
+void proteccionDeCarga(){
    if (v_act < v_ref*1.1) {
     if (!isBelowThreshold) {
       startTime = millis();  // Si es la primera vez que está por debajo, guarda el tiempo actual
@@ -86,28 +83,28 @@ void setPotentiometer(byte channel, byte value) {
   Wire.write(value); // Configura el valor del potenciómetro
   Wire.endTransmission();
 }
-void reference(){
+void referenceValues(){
   modo_ref = Menu_Teclado();
   switch (modo_ref){
     case 0: //No hace nada
       // Desconecta rele forzosamente.
       break;   
     case 1:
-      v_ref= Tension;
-      i_max= Corriente;
+      v_ref= t_teclado;
+      i_max= i_teclado;
      break;
     case 5:
       v_ref= v_encoder;
       i_max = i_encoder;
       break;
     case 2:
-      i_max = Corriente;
+      i_max = i_teclado;
       break;
     case 6:
       i_max = i_encoder;
       break;
     case 3:
-      v_ref = Tension;
+      v_ref = t_teclado;
       break;
     case 7:
       v_ref= v_encoder;

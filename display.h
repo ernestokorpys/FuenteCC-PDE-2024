@@ -47,7 +47,7 @@ void Actualizar_Pantalla(float voltage0, float voltage1){
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
-  switch (SCREEN) {
+  switch (screen) {
     case 0:
       SCREEN0();
       break;
@@ -88,7 +88,7 @@ void SCREEN0() {
     display.print("* ");
   }
   display.print("3. Rampa  ");
-  switch (Mode) {
+  switch (modo) {
     case 0:
     display.print("OFF ");
     break;
@@ -105,7 +105,7 @@ void SCREEN0() {
   if (encoders == true) {
     display.print("Enco ");
   } else{
-    display.print("Ten ");
+    display.print("Tec ");
   }
 }
 void SCREEN1(float voltage0, float voltage1) {
@@ -116,7 +116,7 @@ void SCREEN1(float voltage0, float voltage1) {
   if(encoders==true){
     display.print(v_encoder);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
   } else{
-    display.print(Tension);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
+    display.print(t_teclado);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
   }
   display.setCursor(0, 10);
   display.print("C. R:");
@@ -125,7 +125,7 @@ void SCREEN1(float voltage0, float voltage1) {
   if(encoders==true){
     display.print(i_encoder);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
   } else{
-    display.print(Corriente);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
+    display.print(i_teclado);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
   }
   display.setCursor(0, 20);
   display.print("MODO TENSION");
@@ -140,7 +140,7 @@ void SCREEN2(float voltage1) {
   if(encoders==true){
     display.print(i_encoder);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
   } else{
-    display.print(Corriente);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
+    display.print(i_teclado);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
   }
   display.setCursor(0, 20);
   display.print("MODO CORRIENTE");
@@ -151,12 +151,12 @@ void SCREEN3(float voltage0) {
   display.print("T. R:");
   display.print(voltage0, 3);
   display.print("  D: ");
-  display.print(Tension); // Mostrar los dígitos ingresados para la tensión
+  display.print(t_teclado); // Mostrar los dígitos ingresados para la tensión
   display.setCursor(0, 10);
   display.print("t. R:");
   display.print(TiempoTranscurrido);
   display.print("  D:");
-  display.print(Tiempo);
+  display.print(tiempo);
   display.setCursor(0, 20);
   display.print("MODO RAMPA");
 }
@@ -168,10 +168,10 @@ void SCREEN4() {
   display.println("Presione Tecla");
   switch (menuSelection) {
       case 1: 
-      SCREEN=1;
+      screen=1;
       break;
       case 2:
-      SCREEN=2;
+      screen=2;
       break;
     }
 }
