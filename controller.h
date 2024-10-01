@@ -5,8 +5,10 @@
 //--------------------------------------------------------------------------------------------------------------------------------
 bool estado=true; //0 1_Vacio 2_Carga
 float ki1, ki2, ki3, kv1, kv2, kv3;
-float H_i, ei, ei_m1, ei_m2, ei_m3, ui , ui_m1, H_v, ev , ev_m1 , ev_m2 , ev_m3, uv, uv_m1;
+float  ei, ei_m1, ei_m2, ei_m3, ui , ui_m1,  ev , ev_m1 , ev_m2 , ev_m3, uv, uv_m1;
 float v_ref=15;
+float H_v = 35 / 5;
+float H_i = 0.6;
 float i_max=1.5;
 int caso;
 unsigned long lastExecutionTime = 0; // Variable para almacenar el tiempo de la última ejecución
@@ -135,7 +137,6 @@ void constantesControlador(){
     caso=5;
   };
   i_min=i_min_range[caso];
-
   if (estado) {
   ki1 = valores[caso][0];
   ki2 = valores[caso][1];

@@ -26,6 +26,11 @@ bool isBelowThreshold = false;  // Estado si v_act está por debajo del umbral
 const int pinCarga = 2;  // Pin donde que trabaja sobre el relé
 float aux;
 int dacValue;
+unsigned long previousMillis = 0;   // Almacena el último momento en que se actualizó la pantalla
+const long interval = 1000;         // Intervalo de actualización de pantalla (en milisegundos, 1000 ms = 1 segundo)
+void setPotentiometer(byte channel, byte value);
+void proteccionDeCarga();
+
 void setup() {
   Serial.begin(9600);
   Wire.begin();
@@ -35,12 +40,12 @@ void setup() {
   ads.begin(ADS1115_ADDRESS);
   dac.begin(MCP4725_ADDRESS);
   ads.setDataRate(RATE_ADS1115_860SPS);   // Configura la velocidad de muestreo a 250 SPS
-  pinMode(2, OUTPUT); // Pin D2 Output Rele
-  digitalWrite(2, HIGH);
   reset_variables();
+  v_ref=15; i_max=1;
   constantesControlador();
   setPotentiometer(0,50);  // Canal 0, valor 128 (mitad del rango)
-  proteccionDeCarga();
+  pinMode(2, OUTPUT); // Pin D2 Output Rele
+  digitalWrite(2, HIGH);
 }
 
 void loop() {
@@ -49,16 +54,28 @@ void loop() {
   adc1 = ads.readADC_SingleEnded(1);
   v_act = (adc0 * (5.0 / ADC_RESOLUTION))*H_v;  // Convierte el valor del ADC0 a voltaje
   i_act = (adc1 * (5.0 / ADC_RESOLUTION))*H_i;  // Convierte el valor del ADC1 a voltaje
-
-  // proteccionDeCarga();
-  // Serial.println(v_ref, 6);  // Imprime i_act con 6 decimales de precisión
+  //Serial.println(v_act, 6);
+  //Serial.println(i_act, 6);
+  proteccionDeCarga();
+  Serial.println(v_ref, 6);  // Imprime i_act con 6 decimales de precisión
+  Serial.println(i_act, 6);  // Imprime i_act con 6 decimales de precisión
   algoritmo_control(v_act, i_act);
-  //Actualizar_Pantalla(v_act, i_act);
-  //encoder_1();
-  //encoder_2();
+  ejecutarPantallaCadaSegundo(v_act, i_act);
+  Menu_Teclado();
+  encoder_1();
+  encoder_2();
+  referenceValues();
   aux = (ui * DAC_RESOLUTION) / 5.0;  // Ajusta el voltaje a la resolución del DAC
   dacValue = aux;
   dac.setVoltage(dacValue, false);  // Enviar valor al DAC
+}
+
+void ejecutarPantallaCadaSegundo(float v_act, float i_act) {
+  unsigned long currentMillis = millis();  // Obtiene el tiempo actual
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;  // Actualiza el tiempo para la próxima ejecución
+    Actualizar_Pantalla(v_act, i_act);  // Llama a la función de actualización de pantalla
+  }
 }
 
 void proteccionDeCarga(){
@@ -84,7 +101,7 @@ void setPotentiometer(byte channel, byte value) {
   Wire.endTransmission();
 }
 void referenceValues(){
-  modo_ref = Menu_Teclado();
+  modo_ref = modo;
   switch (modo_ref){
     case 0: //No hace nada
       // Desconecta rele forzosamente.

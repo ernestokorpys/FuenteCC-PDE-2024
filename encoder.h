@@ -38,11 +38,13 @@ void encoder_1() {
   if (currentStateCLK_1 != lastStateCLK_1 && currentStateCLK_1 == LOW) { // Si el estado ha cambiado
     if (digitalRead(encoderDT_1) != currentStateCLK_1) {  // Si DT es diferente a CLK significa que el encoder está girando en sentido horario
       if (v_encoder < 30) {  // Limita el incremento a 30
-        v_encoder=v_encoder+0.1;
+        v_encoder += 0.1;
+        Serial.print("Giro aumento");
       }
     } else {
       if (v_encoder > 0) {  // Limita la disminución a 0
-        v_encoder=v_encoder-0.1;
+        v_encoder -= 0.1;
+        Serial.print("Giro decremento");
       }
     }
     Serial.print("Valor: ");
@@ -69,10 +71,12 @@ void encoder_2() {
     if (digitalRead(encoderDT_2) != currentStateCLK_2) {  // Si DT es diferente a CLK significa que el encoder está girando en sentido horario
       if (i_encoder < 3) {  // Limita el incremento a 3
         i_encoder += 0.1;
+        Serial.print("Giro aumento");
       }
     } else {
       if (i_encoder > 0) {  // Limita la disminución a 0
         i_encoder -= 0.1;
+        Serial.print("Giro decremento");
       }
     }
     Serial.print("Valor i_encoder: ");
