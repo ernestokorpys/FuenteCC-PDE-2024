@@ -44,25 +44,13 @@ int Menu_Teclado(){
         //No hace nada 
         break;
       case 1:         //Limita tension y corriente.
-        if(encoders==true){
-          return modo=5;
-        } else{
-          return modo=1;
-        }
+        return modo=1;
         break;
       case 2:
-        if(encoders==true){
-          return modo=6;
-        } else{
-          return modo=2;
-        }
+        return modo=2;
         break;
       case 3: //Hace rampa
-        if(encoders==true){
-          return modo=7;
-        } else{
-          return modo=3;
-        }
+        return modo=3;
         break;
       }
   }
@@ -160,8 +148,8 @@ bool updateFloatValues() {
   t_teclado_aux = (listValue[0] * 10 + listValue[1]) + (listValue[2] * 0.1) + (listValue[3] * 0.01);
   i_teclado_aux = (listValue[4] + (listValue[5] * 0.1) + (listValue[6] * 0.01) + (listValue[7] * 0.001));
   if (t_teclado_aux<=MAX_TENSION && i_teclado_aux<=MAX_CORRIENTE){
-    t_teclado=t_teclado_aux;
-    i_teclado=i_teclado_aux;
+    v_ref=t_teclado_aux;
+    i_max=i_teclado_aux;
     return true;
   }
   return false;

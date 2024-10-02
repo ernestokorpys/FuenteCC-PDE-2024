@@ -113,20 +113,12 @@ void SCREEN1(float voltage0, float voltage1) {
   display.print("T. R:");
   display.print(voltage0, 3);
   display.print("D: ");
-  if(encoders==true){
-    display.print(v_encoder);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
-  } else{
-    display.print(t_teclado);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
-  }
+  display.print(v_ref);   
   display.setCursor(0, 10);
   display.print("C. R:");
   display.print(voltage1, 3);
   display.print("D: ");
-  if(encoders==true){
-    display.print(i_encoder);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
-  } else{
-    display.print(i_teclado);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
-  }
+  display.print(i_max);
   display.setCursor(0, 20);
   display.print("MODO TENSION");
 }
@@ -137,11 +129,7 @@ void SCREEN2(float voltage1) {
   display.print(voltage1, 3);
   display.setCursor(0, 10);
   display.print("Deseada: ");
-  if(encoders==true){
-    display.print(i_encoder);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
-  } else{
-    display.print(i_teclado);   //AÑADIR UN IF y incluir que sea el contador del potenciometro
-  }
+  display.print(i_max); 
   display.setCursor(0, 20);
   display.print("MODO CORRIENTE");
 }
@@ -151,7 +139,7 @@ void SCREEN3(float voltage0) {
   display.print("T. R:");
   display.print(voltage0, 3);
   display.print("  D: ");
-  display.print(t_teclado); // Mostrar los dígitos ingresados para la tensión
+  display.print(v_ref); // Mostrar los dígitos ingresados para la tensión
   display.setCursor(0, 10);
   display.print("t. R:");
   display.print(TiempoTranscurrido);

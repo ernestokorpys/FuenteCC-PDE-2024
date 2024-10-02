@@ -35,26 +35,18 @@ void control_sin_carga(float v_act, float i_act);
 void lazo_control(float v_act, float i_act);
 
 void algoritmo_control(float v_act, float i_act){
-  if (millis() - lastExecutionTime >= executionInterval) {
     if (i_act > i_min && flag==true) { // || i_act >= 0.05
       estado = false; //Lazo con carga
-      flag = false;
       reset_variables();
-      lastExecutionTime = millis(); // Actualizar el tiempo de la última ejecución
     }
     if (v_act >= v_ref * 1.2 && i_act <= i_min) { 
       estado = true; //Lazo sin carga
-      flag = true;
-      //reset_variables();
-      lastExecutionTime = millis(); // Actualizar el tiempo de la última ejecución
     }
     if(v_act <= v_ref * 0.2 && flag==true){ 
       estado = false; //Lazo con carga
       flag = false;
       reset_variables();
-      lastExecutionTime = millis(); // Actualizar el tiempo de la última ejecución
     }
-  }
   if (estado){
     control_sin_carga(v_act, i_act);
     //Serial.println("Lazo sin carga");
@@ -66,10 +58,8 @@ void algoritmo_control(float v_act, float i_act){
 
 void reset_variables() {
   Serial.println("Reset");
-  H_i = 0.6;
   ei = 0; ei_m1 = 0; ei_m2 = 0; ei_m3 = 0;
   ui = 0; ui_m1 = 0;
-  H_v = 35 / 5;
   ev = 0; ev_m1 = 0; ev_m2 = 0; ev_m3 = 0;
   uv = 0; uv_m1 = 0;
 }

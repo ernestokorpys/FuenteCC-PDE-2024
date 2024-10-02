@@ -7,6 +7,8 @@
 #include <Keypad.h>
 #include "display.h"
 #include "controller.h"
+#include "encoder.h"
+#include "keyboard.h"
 // Direcciones de los dispositivos I2C
 #define ADS1115_ADDRESS 0x48
 #define MCP4725_ADDRESS 0x60
@@ -48,6 +50,7 @@ void setup() {
   digitalWrite(2, HIGH);
 }
 
+
 void loop() {
   //referenceValues();
   adc0 = ads.readADC_SingleEnded(0);
@@ -57,14 +60,15 @@ void loop() {
   //Serial.println(v_act, 6);
   //Serial.println(i_act, 6);
   proteccionDeCarga();
-  Serial.println(v_ref, 6);  // Imprime i_act con 6 decimales de precisión
-  Serial.println(i_act, 6);  // Imprime i_act con 6 decimales de precisión
-  algoritmo_control(v_act, i_act);
-  ejecutarPantallaCadaSegundo(v_act, i_act);
+  //Serial.println(v_ref, 6);  // Imprime i_act con 6 decimales de precisión
+  //Serial.println(i_act, 6);  // Imprime i_act con 6 decimales de precisión
+  //algoritmo_control(v_act, i_act);
+  Actualizar_Pantalla(v_act, i_act);
   Menu_Teclado();
-  encoder_1();
-  encoder_2();
-  referenceValues();
+  if(encoders){
+    encoder_1();
+    encoder_2();
+  }
   aux = (ui * DAC_RESOLUTION) / 5.0;  // Ajusta el voltaje a la resolución del DAC
   dacValue = aux;
   dac.setVoltage(dacValue, false);  // Enviar valor al DAC
@@ -100,33 +104,6 @@ void setPotentiometer(byte channel, byte value) {
   Wire.write(value); // Configura el valor del potenciómetro
   Wire.endTransmission();
 }
-void referenceValues(){
-  modo_ref = modo;
-  switch (modo_ref){
-    case 0: //No hace nada
-      // Desconecta rele forzosamente.
-      break;   
-    case 1:
-      v_ref= t_teclado;
-      i_max= i_teclado;
-     break;
-    case 5:
-      v_ref= v_encoder;
-      i_max = i_encoder;
-      break;
-    case 2:
-      i_max = i_teclado;
-      break;
-    case 6:
-      i_max = i_encoder;
-      break;
-    case 3:
-      v_ref = t_teclado;
-      break;
-    case 7:
-      v_ref= v_encoder;
-      break;
-  }  
-}
+
 
 
