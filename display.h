@@ -7,6 +7,8 @@
 #include <Adafruit_SSD1306.h>
 #include "encoder.h"
 #include "keyboard.h"
+extern float i_act;
+
 
 // Definiciones de pantalla OLED
 #define SCREEN_WIDTH 128
@@ -126,7 +128,7 @@ void SCREEN1(float voltage0, float voltage1) {
 void SCREEN2(float voltage1) {
   display.setCursor(0, 0);
   display.print("Real:");
-  display.print(voltage1, 3);
+  display.print(i_act, 3);
   display.setCursor(0, 10);
   display.print("Deseada: ");
   display.print(i_max); 

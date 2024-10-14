@@ -21,8 +21,8 @@ Adafruit_MCP4725 dac;
 // Variables para almacenar valores del ADC
 int16_t adc0, adc1;
 int modo_ref;
-double v_act = 0; 
-double i_act = 0;
+float v_act = 0; 
+float i_act = 0;
 unsigned long startTime = 0;  // tiempo de inicio para la medición
 bool isBelowThreshold = false;  // Estado si v_act está por debajo del umbral
 const int pinCarga = 2;  // Pin donde que trabaja sobre el relé
@@ -34,7 +34,7 @@ void setPotentiometer(byte channel, byte value);
 void proteccionDeCarga();
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Wire.begin();
   pinoutEncoder();
   initDisplay();
@@ -43,32 +43,67 @@ void setup() {
   dac.begin(MCP4725_ADDRESS);
   ads.setDataRate(RATE_ADS1115_860SPS);   // Configura la velocidad de muestreo a 250 SPS
   reset_variables();
-  v_ref=15; i_max=1;
+  v_ref=12; i_max=1;
+  setPotentiometer(0,50);   // Canal 0, valor 128 (mitad del rango)
+  pinMode(2, OUTPUT);       // Pin D2 Output Rele
   constantesControlador();
-  setPotentiometer(0,50);  // Canal 0, valor 128 (mitad del rango)
-  pinMode(2, OUTPUT); // Pin D2 Output Rele
-  digitalWrite(2, HIGH);
+  ui=0;
+  accionDeControl();
 }
 
 
 void loop() {
-  //referenceValues();
-  adc0 = ads.readADC_SingleEnded(0);
-  adc1 = ads.readADC_SingleEnded(1);
-  v_act = (adc0 * (5.0 / ADC_RESOLUTION))*H_v;  // Convierte el valor del ADC0 a voltaje
-  i_act = (adc1 * (5.0 / ADC_RESOLUTION))*H_i;  // Convierte el valor del ADC1 a voltaje
-  //Serial.println(v_act, 6);
-  //Serial.println(i_act, 6);
-  proteccionDeCarga();
-  //Serial.println(v_ref, 6);  // Imprime i_act con 6 decimales de precisión
-  //Serial.println(i_act, 6);  // Imprime i_act con 6 decimales de precisión
-  //algoritmo_control(v_act, i_act);
-  Actualizar_Pantalla(v_act, i_act);
   Menu_Teclado();
   if(encoders){
     encoder_1();
     encoder_2();
   }
+
+  switch (modo){
+    case 0:
+      lecturaValores();
+      digitalWrite(2, LOW);
+      ui=0;
+      accionDeControl();
+    break;
+    
+    case 1:
+      lecturaValores();
+      algoritmo_control_tension(v_act, i_act);
+      accionDeControl();
+      //Serial.println("tension");
+    break;
+
+    case 2:
+      lecturaValores();
+      algoritmo_control_corriente(v_act, i_act);
+      accionDeControl();
+      //Serial.println(i_act,3);
+    break;
+  case 3: // Revisar
+      lecturaValores();
+      algoritmo_control_rampa(v_act, i_act,12,10); //Tension. Segundos
+      accionDeControl();
+      Serial.println("rampa");
+  default:
+    break;
+  }
+ 
+  //Serial.println(v_act, 6);
+  //Serial.println(i_act, 6);
+  //proteccionDeCarga();
+
+  ejecutarPantallaCadaSegundo(v_act, i_act);
+}
+
+void lecturaValores(){
+  adc0 = ads.readADC_SingleEnded(0);
+  adc1 = ads.readADC_SingleEnded(1);
+  v_act = (adc0 * (5.0 / ADC_RESOLUTION))*H_v;  // Convierte el valor del ADC0 a voltaje
+  i_act = (adc1 * (5.0 / ADC_RESOLUTION))*H_i;  // Convierte el valor del ADC1 a voltaje
+}
+
+void accionDeControl(){
   aux = (ui * DAC_RESOLUTION) / 5.0;  // Ajusta el voltaje a la resolución del DAC
   dacValue = aux;
   dac.setVoltage(dacValue, false);  // Enviar valor al DAC
@@ -104,6 +139,3 @@ void setPotentiometer(byte channel, byte value) {
   Wire.write(value); // Configura el valor del potenciómetro
   Wire.endTransmission();
 }
-
-
-

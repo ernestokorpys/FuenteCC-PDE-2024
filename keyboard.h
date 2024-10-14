@@ -6,9 +6,6 @@
 
 int screen = 0; // Variable que indica la pantalla actual
 int menuSelection = 1; // Variable que indica la selección actual del menú y ayuda a moverse
-const float MAX_TENSION = 30.00;
-const float MAX_CORRIENTE = 3.00;
-float t_teclado = 0.00; float i_teclado = 0.000;
 float t_teclado_aux, i_teclado_aux;
 int tiempo2;
 int tiempo = 0;
@@ -38,11 +35,9 @@ int Menu_Teclado(){
     Serial.println(key);
     Keyboard(key);
     if (key == '#' && screen!=0) {
+    digitalWrite(2, HIGH);
+    constantesControlador();
     switch (menuSelection){
-      case 0: 
-        return modo=0;
-        //No hace nada 
-        break;
       case 1:         //Limita tension y corriente.
         return modo=1;
         break;
@@ -50,6 +45,7 @@ int Menu_Teclado(){
         return modo=2;
         break;
       case 3: //Hace rampa
+        rampa_encendida=true;
         return modo=3;
         break;
       }
@@ -121,6 +117,8 @@ void Keyboard(int key) {
   if (key == 'D') {
     if (screen==0){
       modo=0;
+      ui=0;
+      Serial.println("Holaaa");
     }
     screen = 0;
   }
@@ -147,7 +145,7 @@ bool updateFloatValues() {
   // Calcular los valores de tensión y corriente a partir de los valores ingresados
   t_teclado_aux = (listValue[0] * 10 + listValue[1]) + (listValue[2] * 0.1) + (listValue[3] * 0.01);
   i_teclado_aux = (listValue[4] + (listValue[5] * 0.1) + (listValue[6] * 0.01) + (listValue[7] * 0.001));
-  if (t_teclado_aux<=MAX_TENSION && i_teclado_aux<=MAX_CORRIENTE){
+  if (t_teclado_aux<=30 && i_teclado_aux<=3){
     v_ref=t_teclado_aux;
     i_max=i_teclado_aux;
     return true;
@@ -172,8 +170,8 @@ bool updateRampFloatValues() {
   tiempo2 = (listRamp[4] * 10 + listRamp[5]);
   
   // Verificar si los valores están en rango
-  if (t_teclado_aux <= MAX_TENSION && tiempo2 >= 0) {
-    t_teclado = t_teclado_aux;
+  if (t_teclado_aux <= 30 && tiempo2 >= 0) {
+    v_ref = t_teclado_aux;
     tiempo = tiempo2;
     Serial.print("TiempoCargado: ");
     Serial.println(tiempo);
