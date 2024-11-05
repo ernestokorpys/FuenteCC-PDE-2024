@@ -27,6 +27,7 @@ void SCREEN2(float voltage1);
 void SCREEN3(float voltage0);
 void SCREEN4();
 void SCREEN5();
+void SCREEN6();
 
 void initDisplay() {
   Wire.begin();
@@ -34,6 +35,9 @@ void initDisplay() {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;);
   }
+  //display.ssd1306_command(SSD1306_INVERTDISPLAY);
+  //display.ssd1306_command(SSD1306_SEGREMAP | 0x01); // Estas dos lineas voltean el display
+  //display.ssd1306_command(SSD1306_COMSCANDEC);
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
@@ -67,6 +71,9 @@ void Actualizar_Pantalla(float voltage0, float voltage1){
       break;
     case 5:
       SCREEN5();
+      break;
+    case 6:
+      SCREEN6();
       break;
   }
   display.display();
@@ -141,11 +148,9 @@ void SCREEN3(float voltage0) {
   display.print("T. R:");
   display.print(voltage0, 3);
   display.print("  D: ");
-  display.print(v_ref); // Mostrar los dígitos ingresados para la tensión
+  display.print(v_final); // Mostrar los dígitos ingresados para la tensión
   display.setCursor(0, 10);
-  display.print("t. R:");
-  display.print(TiempoTranscurrido);
-  display.print("  D:");
+  display.print("Tiempo. D:");
   display.print(tiempo);
   display.setCursor(0, 20);
   display.print("MODO RAMPA");
@@ -153,15 +158,19 @@ void SCREEN3(float voltage0) {
 
 void SCREEN4() {
   display.setCursor(0, 0);
-  display.println("Valores Invalidos");
+  display.println("Valores Cargados");
   display.setCursor(0, 10);
-  display.println("Presione Tecla");
+  display.println("Invalidos");
   switch (menuSelection) {
       case 1: 
-      screen=1;
-      break;
+        screen=1;
+        break;
       case 2:
-      screen=2;
+        screen=2;
+      break;
+      case 6:
+        screen=0;
+        menuSelection = 1;
       break;
     }
 }
@@ -174,21 +183,21 @@ void SCREEN5() {
   switch (menuSelection) {
     case 1:
       display.print("TENSION: ");
-      for (int i = 0; i < 4; i++) {   // Mostrar los dígitos ingresados para la tensión
-        display.print(tensString[i]);
-      }
-      // Mostrar el separador decimal
-      display.print(".");
-      display.print(tensString[2]); // Mostrar el tercer dígito como el decimal
+      display.print(tensString[0]);   // Primer dígito
+      display.print(tensString[1]);   // Segundo dígito
+      display.print(".");             // Separador decimal
+      display.print(tensString[2]);   // Tercer dígito (decimal)
+      display.print(tensString[3]);   // Cuarto dígito (decimal)
+
       // Mostrar los dígitos ingresados para la corriente
       display.setCursor(0, 10);
       display.print("CORRIENTE: ");
-      for (int i = 0; i < 4; i++) {
-        display.print(corrienteString[i]);
-      }
-      // Mostrar el separador decimal
-      display.print(".");
-      display.print(corrienteString[1]); // Mostrar el segundo dígito como el decimal
+      display.print(corrienteString[0]); // Primer dígito
+      display.print(".");    
+      display.print(corrienteString[1]); // Segundo dígito
+      display.print(corrienteString[2]); // Tercer dígito (decimal)
+      display.print(corrienteString[3]); // Cuarto dígito (decimal)
+
       display.setCursor(0, 20);
       display.print("EDITAR VALORES: ");
       break;
@@ -200,21 +209,33 @@ void SCREEN5() {
       break;
     case 3:
       display.print("TENSION: ");
-      for (int i = 0; i < 4; i++) {
-        display.print(tensString[i]);
-      }
-      // Mostrar el separador decimal
-      display.print(".");
-      display.print(tensString[2]); // Mostrar el tercer dígito como el decimal
-      // Mostrar los dígitos ingresados para el tiempo
+      display.print(tensString[0]); // Primer dígito
+      display.print(tensString[1]); // Segundo dígito
+      display.print(".");    
+      display.print(tensString[2]); // Tercer dígito (decimal)
+      display.print(tensString[3]); // Cuarto dígito (decimal)
       display.setCursor(0, 10);
       display.print("TIEMPO: ");
-      for (int i = 4; i < 6; i++) {
-        display.print(corrienteString[i - 4]);
-      }
+      display.print(corrienteString[0]); // Cuarto dígito (decimal)
+      display.print(corrienteString[1]); // Cuarto dígito (decimal)
       display.print(" s");
       break;
   }
+}
+
+void SCREEN6() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.print("Corriente MAX: ");
+  for (int i = 0; i < indexCorrienteMax; i++) {
+    display.print(corrienteMaxString[i]);
+    if (i == 0) display.print("."); // Pone el punto decimal después del primer dígito
+  }
+  display.setCursor(0, 10);
+  display.print("Valor Actual: ");
+  display.print(i_proteccion);
+  display.display();
 }
 
 #endif
