@@ -35,9 +35,6 @@ void initDisplay() {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;);
   }
-  //display.ssd1306_command(SSD1306_INVERTDISPLAY);
-  //display.ssd1306_command(SSD1306_SEGREMAP | 0x01); // Estas dos lineas voltean el display
-  //display.ssd1306_command(SSD1306_COMSCANDEC);
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
@@ -113,11 +110,9 @@ void SCREEN0() {
   }
   if (encoders == true) {
     display.print("Enco ");
-  } else{
-    display.print("Tec ");
   }
 }
-void SCREEN1(float voltage0, float voltage1) {
+void SCREEN1(float voltage0, float voltage1) { //Pantalla Modo tesnión
   display.setCursor(0, 0);
   display.print("T. R:");
   display.print(voltage0, 3);
@@ -132,7 +127,7 @@ void SCREEN1(float voltage0, float voltage1) {
   display.print("MODO TENSION");
 }
 
-void SCREEN2(float voltage1) {
+void SCREEN2(float voltage1) {//Pantalla Modo corriente
   display.setCursor(0, 0);
   display.print("Real:");
   display.print(i_act, 3);
@@ -143,7 +138,7 @@ void SCREEN2(float voltage1) {
   display.print("MODO CORRIENTE");
 }
 
-void SCREEN3(float voltage0) {
+void SCREEN3(float voltage0) { //Pantalla Modo rampa
   display.setCursor(0, 0);
   display.print("T. R:");
   display.print(voltage0, 3);
@@ -156,7 +151,7 @@ void SCREEN3(float voltage0) {
   display.print("MODO RAMPA");
 }
 
-void SCREEN4() {
+void SCREEN4() { //Pantalla Modo valor invalido cargado
   display.setCursor(0, 0);
   display.println("Valores Cargados");
   display.setCursor(0, 10);

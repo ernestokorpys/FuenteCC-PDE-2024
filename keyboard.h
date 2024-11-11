@@ -32,13 +32,14 @@ float v_final;
 float i_proteccion = 3.0;       // Variable para almacenar el valor de corriente máxima de protección
 int corrienteMaxString[4] = {0}; // Array para almacenar cada dígito de corriente máxima
 int indexCorrienteMax = 0;       // Índice para ingresar los dígitos de corriente máxima
+extern volatile bool sobrecorriente;
 
 void Keyboard(int key);
 bool updateFloatValues();
 void updateValues(int key);
 void updateRampValues(int key);
 bool updateRampFloatValues();
-bool updateCurrentProtection(); 
+bool updateCurrentProtection();
 int mapCurrentToPotValue(float desiredCurrent);
 void setPotentiometer(byte channel, byte value);
 
@@ -48,12 +49,13 @@ int Menu_Teclado() {
     Serial.println(key);
     Keyboard(key);
     if (key == '#' && screen != 0) {
+      sobrecorriente = false;
       digitalWrite(2, HIGH);
       switch (menuSelection) {
         case 1:  //Limita tension y corriente.
           return modo = 1;
           break;
-        case 2:
+        case 2:  //Modo corriente
           return modo = 2;
           break;
         case 3:  //Hace rampa
@@ -69,19 +71,19 @@ int Menu_Teclado() {
 void Keyboard(int key) {
   if (edit_values == true) {
     if (key >= '0' && key <= '9') {
-       if (menuSelection == 6) { // Corriente máxima
+      if (menuSelection == 6) { // Corriente máxima
         if (indexCorrienteMax < 4) {
           corrienteMaxString[indexCorrienteMax++] = key - '0';
         }
         if (indexCorrienteMax == 4) { // Si se han ingresado los 4 valores de corriente máxima
-          indexCorrienteMax=0;
+          indexCorrienteMax = 0;
           edit_values = false;
-          if (updateCurrentProtection()){
+          if (updateCurrentProtection()) {
             Serial.print("Actualizado");
           } else Serial.print("Fuera de rango");
-          
+
         }
-      } 
+      }
 
       else if (menuSelection != 3) {
         updateValues(key);
@@ -115,10 +117,10 @@ void Keyboard(int key) {
     }
   }
 
-  if (key== 'A' && screen == 0 && edit_values==false){  //seteo valor maximo de corriente.
-    edit_values=true;
-    screen=6;
-    menuSelection=6;
+  if (key == 'A' && screen == 0 && edit_values == false) { //seteo valor maximo de corriente.
+    edit_values = true;
+    screen = 6;
+    menuSelection = 6;
   }
   else if (key == 'A' && screen != 0) {
     edit_values = true;
@@ -150,7 +152,7 @@ void Keyboard(int key) {
     if (screen == 0) {
       modo = 0;
       ui = 0;
-      ui_m1=0;
+      ui_m1 = 0;
       reset_variables();
     }
     screen = 0;
@@ -164,12 +166,10 @@ void Keyboard(int key) {
   }
 }
 
-bool updateCurrentProtection() {
-  // Convertir el valor de cadena a un valor flotante de corriente
+bool updateCurrentProtection() {   // Convertir el valor de cadena a un valor flotante de corriente
   float value = corrienteMaxString[0] * 1.0 + corrienteMaxString[1] * 0.1 + corrienteMaxString[2] * 0.01 + corrienteMaxString[3] * 0.001;
-  // Verificar si el valor está en el rango permitido
-  if (value <= 3.0 && value > 0.0) {
-    screen = 0;           // Ir a la pantalla de confirmación
+  if (value <= 3.0 && value > 0.3) {   // Verificar si el valor está en el rango permitido
+    screen = 0;           // Ir a la pantalla de inicio
     i_proteccion = value;
     menuSelection = 1;
     int potValue = mapCurrentToPotValue(i_proteccion);
@@ -196,7 +196,7 @@ bool updateFloatValues() {
   // Calcular los valores de tensión y corriente a partir de los valores ingresados
   float t_teclado_aux = (listValue[0] * 10 + listValue[1]) + (listValue[2] * 0.1) + (listValue[3] * 0.01);
   float i_teclado_aux = (listValue[4] + (listValue[5] * 0.1) + (listValue[6] * 0.01) + (listValue[7] * 0.001));
-  if (t_teclado_aux <= 30 && i_teclado_aux <= 3) {
+  if ((t_teclado_aux <= 30 & t_teclado_aux >= 4) && (i_teclado_aux <= 3 & i_teclado_aux >= 0.3)) {
     v_ref = t_teclado_aux;
     i_max = i_teclado_aux;
     return true;
@@ -223,7 +223,7 @@ bool updateRampFloatValues() {
   // Verificar si los valores están en rango
   if (t_teclado_aux <= 30 && tiempo2 >= 0) {
     v_ref = t_teclado_aux;
-    v_final=t_teclado_aux;
+    v_final = t_teclado_aux;
     tiempo = tiempo2;
     return true;  // Los valores están en rango y se cargaron a las variables
   }
@@ -231,15 +231,12 @@ bool updateRampFloatValues() {
 }
 
 int mapCurrentToPotValue(float desiredCurrent) {
-  // Convertir corriente a milésimas de amperio
-  int currentMilliAmps = desiredCurrent * 1000;
-  // Mapear de 1 (0.001 A) a 3000 (3 A) al rango de 255 a 1
-  int potValue = map(currentMilliAmps, 1, 3000, 255, 1);
-  // Limitar el valor al rango de 1 a 255
-  potValue = constrain(potValue, 1, 255);
-
+  int currentMilliAmps = desiredCurrent * 1000;           // Convertir corriente mA
+  int potValue = map(currentMilliAmps, 1, 3000, 255, 1); // Mapear de 1 (0.001 A) a 3000 (3 A) al rango de 255 a 1
+  potValue = constrain(potValue, 1, 255);               // Limitar el valor al rango de 1 a 255
   return potValue;
 }
+
 void setPotentiometer(byte channel, byte value) {
   Wire.beginTransmission(MCP4661_ADDRESS);
   Wire.write((channel == 0) ? 0x00 : 0x10);  // Selecciona el canal (0 o 1)

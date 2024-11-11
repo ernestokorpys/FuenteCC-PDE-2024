@@ -14,9 +14,11 @@
 #define MCP4725_ADDRESS 0x60
 #define DAC_RESOLUTION 4095.0
 #define ADC_RESOLUTION 26666.0  // Valor Practico diferente a valor real que es 2^16
-#define MCP4661_ADDRESS 0x28    //Potenciometro
+#define MCP4661_ADDRESS 0x28    // Potenciometro
+
 Adafruit_ADS1115 ads;
 Adafruit_MCP4725 dac;
+//Definición de pines
 #define pinCarga 2
 #define int_cc 3
 // Variables para almacenar valores del ADC
@@ -34,66 +36,61 @@ void ISR_apagar_todo() {
   sobrecorriente = true;
   digitalWrite(pinCarga, LOW);
 }
-
+bool sobretension = false;        //Bandera de protección por sobretensión.
+//------INICIALIZACIÓN----------------------------------------------------------
 void setup() {
   Serial.begin(115200);
   Wire.begin();
   pinoutEncoder();
   initDisplay();
-  // Inicialización de ADC y DAC
-  ads.begin(ADS1115_ADDRESS);
+  ads.begin(ADS1115_ADDRESS); // Inicialización de ADC y DAC
   dac.begin(MCP4725_ADDRESS);
   ads.setDataRate(RATE_ADS1115_860SPS);  // Configura la velocidad de muestreo a 860 SPS
   setPotentiometer(0, 1);               // Canal 0, valor 128 (mitad del rango)  1= 5v 256 =0v
   //Inicialización de Pines
-  pinMode(pinCarga, OUTPUT);  // Pin D2 Output Rele
-  pinMode(int_cc, INPUT);
+  pinMode(pinCarga, OUTPUT);  // Pin D2 Salida al Rele
+  pinMode(int_cc, INPUT);     // Pin D3 Entrada del comparador de ventana
   attachInterrupt(digitalPinToInterrupt(int_cc), ISR_apagar_todo, FALLING);
-  //Valores iniciales
+  //Valores iniciales por defecto
   reset_variables();
   v_ref = 15;
   i_max = 1;
-  escribir_DAC(0);
+  escribir_DAC(0);  
 }
-
-
+//-------BUCLE PRINCIPAL-----------------------------------------------------------
 void loop() {
   Menu_Teclado();
-  
   if (encoders) {
     encoder_1();
     encoder_2();
   }
-
   switch (modo) {
     case 0:  //Modo Apagado
       lecturaValores();
-      digitalWrite(2, LOW);
+      digitalWrite(2, LOW); 
       escribir_DAC(0);
       break;
 
-    case 1:
+    case 1: //Modo tensión
       lecturaValores();
+      proteccion_tension();
       algoritmo_control_tension(v_act, i_act);
       escribir_DAC(ui);
-      //Serial.println("tension");
       break;
 
-    case 2:
+    case 2: //Modo corriente
       lecturaValores();
       algoritmo_control_corriente(v_act, i_act);
       escribir_DAC(ui);
-      //Serial.println(i_act,3);
       break;
-    case 3:  // Revisar
+    case 3:  //Modo Rampa
       lecturaValores();
-      algoritmo_control_rampa(v_act, i_act, v_final, tiempo/1.6);  //Tension. Segundos
+      proteccion_tension();
+      algoritmo_control_rampa(v_act, i_act, v_final, tiempo / 1.6); //Tension. Segundos
       escribir_DAC(ui);
-      Serial.println("rampa");
     default:
       break;
   }
-  
   ejecutarPantallaCadaSegundo(v_act, i_act);
 }
 
@@ -118,3 +115,13 @@ void ejecutarPantallaCadaSegundo(float v_act, float i_act) {
   }
 }
 
+void proteccion_tension() {
+  if ((v_act >= 1.3 * v_ref | v_act >= 31) & !sobretension) {
+    sobretension = true;
+    digitalWrite(pinCarga, LOW);
+  }
+  if ((abs(v_ref - v_act) <= 0.1 * v_ref) & sobretension) {
+    sobretension = false;
+    digitalWrite(pinCarga, HIGH);
+  }
+}
