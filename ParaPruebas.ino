@@ -27,6 +27,8 @@ float v_act = 0;
 float i_act = 0;
 float aux;
 int dacValue;
+unsigned long tiempoDesconexion = 0; // Para almacenar el tiempo de desconexión
+bool cargando = true;               // Estado del pin de carga
 // Para actualización de la pantalla
 unsigned long previousMillis = 0;  // Almacena el último momento en que se actualizó la pantalla
 #define interval 1000              // Intervalo de actualización de pantalla (en milisegundos, 1000 ms = 1 segundo)
@@ -37,6 +39,8 @@ void ISR_apagar_todo() {
   digitalWrite(pinCarga, LOW);
 }
 bool sobretension = false;        //Bandera de protección por sobretensión.
+unsigned long startTime = 0;  // Tiempo de inicio para la medición
+bool isBelowThreshold = false;  // Estado si v_act está por debajo del umbral
 //------INICIALIZACIÓN----------------------------------------------------------
 void setup() {
   Serial.begin(115200);
@@ -115,13 +119,18 @@ void ejecutarPantallaCadaSegundo(float v_act, float i_act) {
   }
 }
 
-void proteccion_tension() {
-  if ((v_act >= 1.3 * v_ref | v_act >= 31) & !sobretension) {
-    sobretension = true;
+void proteccion_tension(){
+   if (v_act < v_ref*1.1) {
+    if (!isBelowThreshold) {
+      startTime = millis();  // Si es la primera vez que está por debajo, guarda el tiempo actual
+      isBelowThreshold = true;
+    } else {
+      if (millis() - startTime >= 2000) { // Han pasado 2 segundos con v_act por debajo del valor de referencia
+        digitalWrite(pinCarga, HIGH);
+      }
+    }
+  } else {    // Si v_act está por encima del valor de referencia
+    isBelowThreshold = false;  // Reinicia el estado
     digitalWrite(pinCarga, LOW);
-  }
-  if ((abs(v_ref - v_act) <= 0.1 * v_ref) & sobretension) {
-    sobretension = false;
-    digitalWrite(pinCarga, HIGH);
   }
 }
